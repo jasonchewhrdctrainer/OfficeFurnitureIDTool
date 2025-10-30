@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Furniture Interior Design Tool (Demo)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load React, ReactDOM, and Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Load JSZip for the download package feature -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // This entire block is JSX and will be transpiled by the Babel CDN loaded above.
+
+        const { useState, useRef, useEffect, useCallback } = React;
+        // Removed Framer Motion dependencies (motion and AnimatePresence) to fix the TypeError.
+        
+        // --- Multi-language Translation Data ---
+        const translations = {
+            'en': {
+                title: "Office Furniture Interior Design Tool (Demo)",
+                subtitle: "Design, visualize, and preview furniture layouts in any professional office setting.",
+                step1: "1. Upload Furniture Photos",
+                charactersTitle: "Office Furniture",
+                addCharacter: "Add Furniture",
+                uploadCharacter: "Upload Furniture",
+                characterDescriptionPlaceholder: "Model/Part No. (e.g., Chair 901)",
+                backgroundTitle: "Office Background",
+                uploadBackground: "Upload Background",
+                backgroundDescPlaceholder: "Or describe your desired office background, e.g., 'Modern executive office with city view'...",
+                step3: "2. Generate Photos",
+                generateButton: "Generate New Office Workspace Photos",
+                generating: "Generating workspace...",
+                resultsTitle: "Your New Office Workspace Photos",
+                regenerate: "Regenerate",
+                downloadImage: "Download",
+                regenerateCopy: "New Caption",
+                copyTooltip: "Copy Caption",
+                copied: "Copied!",
+                errorOccurred: "An error occurred. Please try again.",
+                tryAgain: "Try Again",
+                suggestionError: "Could not initialize styles. Please refresh.",
+                packageZip: "Package ZIP",
+                packaging: "Packaging...",
+                startOver: "Start Over",
+                historyButton: "History",
+                historyTitle: "Generation History (In-Browser)",
+                loadButton: "Load",
+                deleteButton: "Delete",
+                emptyHistory: "No records yet. Go create your first workspace photo!",
+                confirmDelete: "Are you sure you want to delete this record? This cannot be undone.",
+                language: "Language",
+                alertMessage: "Please upload at least one furniture photo and provide an office background image or description.",
+                originalThemeTitle: "Photorealistic Integration",
+                originalThemeDescription: "A realistic composition based on your uploads.",
+            },
+            // ... (other translations omitted for brevity but remain in the final code)
+            'zh-TW': {
+                title: "辦公傢俱室內設計工具 (Demo)",
+                subtitle: "設計、視覺化並預覽辦公傢俱在專業空間中的佈局。",
+                step1: "1. 上傳傢俱照片",
+                charactersTitle: "辦公傢俱",
+                addCharacter: "新增傢俱",
+                uploadCharacter: "上傳傢俱",
+                characterDescriptionPlaceholder: "型號/零件編號 (例: 椅子 901)",
+                backgroundTitle: "辦公室背景",
+                uploadBackground: "上傳背景",
+                backgroundDescPlaceholder: "或在此描述您想要的辦公室背景，例如「具有城市景觀的現代主管辦公室」...",
+                step3: "2. 生成照片",
+                generateButton: "生成新的辦公空間照片",
+                generating: "正在生成辦公空間...",
+                resultsTitle: "您的新辦公空間照片",
+                regenerate: "重新生成",
+                downloadImage: "下載圖片",
+                regenerateCopy: "重新生成文案",
+                copyTooltip: "複製文案",
+                copied: "已複製！",
+                errorOccurred: "發生錯誤，請重試。",
+                tryAgain: "再試一次",
+                suggestionError: "無法初始化風格。請刷新頁面重試。",
+                packageZip: "打包 ZIP 檔",
+                packaging: "打包中...",
+                startOver: "重新開始",
+                historyButton: "生成紀錄",
+                historyTitle: "您的生成紀錄 (瀏覽器內儲存)",
+                loadButton: "載入此項",
+                deleteButton: "刪除",
+                emptyHistory: "這裡還沒有紀錄，快去生成您的第一張辦公空間照片吧！",
+                confirmDelete: "確定要刪除這項紀錄嗎？此操作無法復原。",
+                language: "語言",
+                alertMessage: "請至少上傳一張傢俱照片，並提供辦公室背景圖片或描述。",
+                originalThemeTitle: "寫實整合",
+                originalThemeDescription: "根據您上傳的圖片與描述進行寫實合成。",
+            },
+            'zh-CN': {
+                title: "办公家具室内设计工具 (Demo)",
+                subtitle: "设计、可视化并预览办公家具在专业空间中的布局。",
+                step1: "1. 上传家具照片",
+                charactersTitle: "办公家具",
+                addCharacter: "新增家具",
+                uploadCharacter: "上传家具",
+                characterDescriptionPlaceholder: "型号/零件编号 (例: 椅子 901)",
+                backgroundTitle: "办公室背景",
+                uploadBackground: "上传背景",
+                backgroundDescPlaceholder: "或在此描述您想要的办公室背景，例如“具有城市景观的现代主管办公室”...",
+                step3: "2. 生成照片",
+                generateButton: "生成新的办公空间照片",
+                generating: "正在生成办公空间...",
+                resultsTitle: "您的新办公空间照片",
+                regenerate: "重新生成",
+                downloadImage: "下载图片",
+                regenerateCopy: "重新生成文案",
+                copyTooltip: "复制文案",
+                copied: "已复制！",
+                errorOccurred: "发生错误，请重试。",
+                tryAgain: "再试一次",
+                suggestionError: "无法初始化风格。请刷新页面重试。",
+                packageZip: "打包 ZIP 文件",
+                packaging: "打包中...",
+                startOver: "重新开始",
+                historyButton: "生成记录",
+                historyTitle: "您的生成记录 (浏览器内储存)",
+                loadButton: "载入此项",
+                deleteButton: "删除",
+                emptyHistory: "这里还没有记录，快去生成您的第一张办公空间照片吧！",
+                confirmDelete: "确定要删除这项记录吗？此操作无法复原。",
+                language: "语言",
+                alertMessage: "请至少上传一张家具照片，并提供办公室背景图片或描述。",
+                originalThemeTitle: "写实整合",
+                originalThemeDescription: "根据您上传的图片与描述进行写实合成。",
+            },
+            'ja': {
+                title: "オフィス家具インテリアデザインツール (Demo)",
+                subtitle: "プロのオフィス環境で、家具の配置をデザイン、視覚化、プレビューします。",
+                step1: "1. 家具写真をアップロード",
+                charactersTitle: "オフィス家具",
+                addCharacter: "家具を追加",
+                uploadCharacter: "アップロード",
+                characterDescriptionPlaceholder: "モデル/品番 (例: 椅子 901)",
+                backgroundTitle: "オフィス背景",
+                uploadBackground: "背景をアップロード",
+                backgroundDescPlaceholder: "希望のオフィス背景を説明してください。例：「市街の景色が見えるモダンな役員室」",
+                step3: "2. 写真を生成",
+                generateButton: "新しいオフィス空間写真を生成",
+                generating: "ワークスペースを生成中...",
+                resultsTitle: "新しいオフィス空間の写真",
+                regenerate: "再生成",
+                downloadImage: "ダウンロード",
+                regenerateCopy: "新しいキャプション",
+                copyTooltip: "キャプションをコピー",
+                copied: "コピーしました！",
+                errorOccurred: "エラーが発生しました。もう一度お試しください。",
+                tryAgain: "再試行",
+                suggestionError: "スタイルを初期化できませんでした。リフレッシュしてください。",
+                packageZip: "ZIPで圧縮",
+                packaging: "圧縮中...",
+                startOver: "最初からやり直す",
+                historyButton: "履歴",
+                historyTitle: "生成履歴 (ブラウザ内)",
+                loadButton: "読み込む",
+                deleteButton: "削除",
+                emptyHistory: "まだ記録がありません。最初のワークスペース写真を作成しましょう！",
+                confirmDelete: "この記録を削除してもよろしいですか？この操作は元に戻せません。",
+                language: "言語",
+                alertMessage: "家具写真を少なくとも1枚アップロードし、背景画像または説明を提供してください。",
+                originalThemeTitle: "フォトリアルな統合",
+                originalThemeDescription: "アップロードに基づいてリアルな合成を行います。",
+            },
+            'ko': {
+                title: "사무용 가구 인테리어 디자인 도구 (Demo)",
+                subtitle: "전문적인 사무실 환경에서 가구 레이아웃을 디자인하고 시각화하며 미리 보세요。",
+                step1: "1. 가구 사진 업로드",
+                charactersTitle: "사무용 가구",
+                addCharacter: "가구 추가",
+                uploadCharacter: "업로드",
+                characterDescriptionPlaceholder: "모델/부품 번호 (예: 의자 901)",
+                backgroundTitle: "사무실 배경",
+                uploadBackground: "배경 업로드",
+                backgroundDescPlaceholder: "원하는 사무실 배경을 설명해주세요. 예: '도시 전망이 있는 현대적인 임원실'",
+                step3: "2. 사진 생성",
+                generateButton: "새 오피스 워크스페이스 사진 생성",
+                generating: "워크스페이스 생성 중...",
+                resultsTitle: "새 오피스 워크스페이스 사진",
+                regenerate: "재생성",
+                downloadImage: "다운로드",
+                regenerateCopy: "새 캡션",
+                copyTooltip: "캡션 복사",
+                copied: "복사됨!",
+                errorOccurred: "오류가 발생했습니다. 다시 시도해 주세요。",
+                tryAgain: "다시 시도",
+                suggestionError: "스타일을 초기화할 수 없습니다. 새로고침하세요。",
+                packageZip: "ZIP으로 압축",
+                packaging: "압축 중...",
+                startOver: "처음부터 다시 시작",
+                historyButton: "기록",
+                historyTitle: "생성 기록 (브라우저 내)",
+                loadButton: "불러오기",
+                deleteButton: "삭제",
+                emptyHistory: "아직 기록이 없습니다. 첫 워크스페이스 사진을 만들어 보세요!",
+                confirmDelete: "이 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다。",
+                language: "언어",
+                alertMessage: "최소 한 장의 가구 사진을 업로드하고 사무실 배경 이미지 또는 설명을 제공해주세요。",
+                originalThemeTitle: "포토리얼리스틱 통합",
+                originalThemeDescription: "업로드를 기반으로 사실적인 합성을 합니다。",
+            },
+        };
+
+        const langMap = {
+            'en': 'English',
+            'zh-TW': '繁體中文',
+            'zh-CN': '简体中文',
+            'ja': '日本語',
+            'ko': '한국어'
+        };
+
+        // --- AI Prompt Functions ---
+        const prompts = {
+            generateImage: (styleContext, furniture, hasBackground, backgroundDescription) => {
+                const furnitureDescriptions = furniture.map((item, index) => 
+                    `Furniture Item ${index + 1}${item.description ? ` (Model: ${item.description})` : ''}`
+                ).join(', ');
+
+                const furniturePrompt = `The generated image must precisely replicate the appearance and shape of the uploaded furniture item(s). Pay meticulous attention to preserving the unique design, material texture, and colors from the reference image(s). The items are: ${furnitureDescriptions}.`;
+                
+                const backgroundPrompt = hasBackground
+                    ? "Use the uploaded background image as the primary office setting. You have creative freedom to slightly adjust the lighting, shadows, and camera angle to create a more natural, seamless, and aesthetically pleasing integration of the furniture. The core office setting and architectural objects must remain the same."
+                    : `Generate a photorealistic, professional office background based on the following description: "${backgroundDescription}". Then, naturally integrate the furniture item(s) into this office setting, placing them appropriately (e.g., chairs by desks, desks centered, etc.).`;
+
+                const stylePrompt = "The overall style should be a high-definition, photorealistic image suitable for a corporate portfolio or catalog.";
+
+                return `**Absolute Highest Priority & Non-negotiable Rule:** ${furniturePrompt}
+                **Composition and Framing:** The furniture should be the main subject. Frame the image as a wide shot or a medium shot, showcasing the item's placement and usability within the office context.
+                Background Setting: ${backgroundPrompt}
+                **Integration Mandate:** The final image must look like a single, cohesive photograph, not a composite. Pay extreme attention to matching the lighting, shadows, and perspective between the furniture and the office background for perfect integration.
+                Style Directive: ${stylePrompt}
+                **Strict Negative Constraint:** Do NOT add any text, labels, watermarks, or names onto the image itself. The image must be clean.
+                The final result must be a high-quality, beautifully composed photograph where the furniture is clearly visible and integrated naturally into a professional office environment, with no visible signs of compositing.`;
+            },
+            generateCopy: (styleContext, imageDescription, furniture, lang) => {
+                const itemDescriptions = furniture.map(c => c.description).filter(Boolean).join(', ');
+                const context = itemDescriptions ? `featuring the items: ${itemDescriptions}` : 'showcasing a modern design.';
+                const locationContext = `The photo is of a newly designed office workspace.`;
+
+                return `You are a corporate furniture marketing specialist. Write a concise, professional, and engaging product caption (3-4 sentences) for an online catalog or B2B social media post.
+                **IMPORTANT**: The post must focus on the professional application, quality, and aesthetics of the office furniture. Do NOT mention words like "virtual", "AI", "generated", or the specific style context.
+                The scene of the photo is: "${imageDescription}". ${locationContext}
+                The post must be written in ${langMap[lang]}.
+                The tone should be sophisticated and informative, focusing on benefits like productivity or design.
+                Generate 3-4 professional, design-oriented hashtags (e.g., #OfficeDesign, #ErgonomicFurniture, #CorporateInteriors).
+                Your response must be a valid JSON object containing "copy" and "hashtags" keys. Example: {"copy": "Transforming the modern workspace with our new line of ergonomic seating. Designed for long-term productivity and style, it sets the standard for corporate interiors.", "hashtags": ["#OfficeDesign", "#ErgonomicFurniture", "#CorporateInteriors"]}`;
+            },
+            describeImageForCopy: `Briefly describe the key furniture item(s) and their placement within the office scene in one sentence, to be used for generating marketing copy.`
+        };
+
+        // --- Helper & API Functions ---
+        const GEMINI_API_KEY = ""; // In Canvas environment, this will be handled automatically.
+        const IMAGE_MODEL = "gemini-2.5-flash-image-preview";
+        const TEXT_MODEL = "gemini-2.5-flash-preview-05-20";
+        const MULTIMODAL_MODEL = "gemini-2.5-flash-preview-05-20";
+
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        const cropImage = (imageBase64) => new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = imageBase64;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Use a square crop for consistent input images
+                const size = Math.min(img.width, img.height);
+                canvas.width = size;
+                canvas.height = size;
+                
+                const startX = (img.width - size) / 2;
+                const startY = (img.height - size) / 2;
+                
+                ctx.drawImage(img, startX, startY, size, size, 0, 0, size, size);
+                
+                resolve(canvas.toDataURL('image/jpeg'));
+            };
+            img.onerror = reject;
+        });
+
+        async function runGeminiText(prompt, retries = 3) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }]})
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                         console.error("Invalid response from Gemini Text API:", data);
+                         if (data.promptFeedback) {
+                             console.error("Prompt Feedback:", JSON.stringify(data.promptFeedback, null, 2));
+                         }
+                         throw new Error("Invalid response structure from Gemini Text API");
+                    }
+                    return data.candidates[0].content.parts[0].text;
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed for text generation:`, error);
+                    if (i === retries - 1) throw error;
+                    await new Promise(res => setTimeout(res, 1000 * (i + 1)));
+                }
+            }
+        }
+
+        async function runVirtualTourImageGeneration(prompt, furniture, background, retries = 3) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+            
+            const parts = [{ text: prompt }];
+            furniture.forEach(item => {
+                if (item.image) {
+                    parts.push({ inlineData: { mimeType: "image/jpeg", data: item.image.split(',')[1] } });
+                }
+            });
+            if (background.image) {
+                parts.push({ inlineData: { mimeType: "image/jpeg", data: background.image.split(',')[1] } });
+            }
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts }] })
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    const generatedPart = data.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
+                    
+                    if (!generatedPart || !generatedPart.inlineData.data) {
+                        console.error("Invalid response from Gemini Image API:", data);
+                        if (data.promptFeedback) {
+                             console.error("Prompt Feedback:", JSON.stringify(data.promptFeedback, null, 2));
+                        }
+                        throw new Error("No image data in API response");
+                    }
+                    return `data:${generatedPart.inlineData.mimeType};base64,${generatedPart.inlineData.data}`;
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed for image generation:`, error);
+                    if (i === retries - 1) throw error;
+                    await new Promise(res => setTimeout(res, 1500 * (i + 1)));
+                }
+            }
+        }
+
+        async function runGeminiMultimodal(prompt, imageBase64, retries = 3) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MULTIMODAL_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+            const imageWithoutPrefix = imageBase64.split(',')[1];
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: prompt },
+                                    { inlineData: { mimeType: "image/jpeg", data: imageWithoutPrefix } }
+                                ]
+                            }],
+                        })
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                         throw new Error("Invalid response structure from Gemini Multimodal API");
+                    }
+                    return data.candidates[0].content.parts[0].text;
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed for multimodal generation:`, error);
+                    if (i === retries - 1) throw error;
+                    await new Promise(res => setTimeout(res, 1500 * (i + 1)));
+                }
+            }
+        }
+
+        const parseJsonFromMarkdown = (text) => {
+            const match = text.match(/```json\n([\s\S]*?)\n```/);
+            if (match && match[1]) {
+                try {
+                    return JSON.parse(match[1]);
+                } catch (e) { console.error("Failed to parse JSON from markdown", e); return null; }
+            }
+            try {
+              return JSON.parse(text);
+            } catch(e) { console.error("Failed to parse text as JSON", e); return null; }
+        };
+
+
+        // --- Icons ---
+        const IconSparkles = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>;
+        const IconUpload = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>;
+        const IconCopy = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
+        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
+        const IconRefresh = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M20 4l-4 4M4 20l4-4" /></svg>;
+        const IconDownload = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
+        const IconZip = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>;
+        const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
+        const IconHistory = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+        const IconTrash = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
+        const IconGlobe = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 sm:w-5 sm:h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C13.18 7.061 14.1 7.5 15 7.5h3" /></svg>;
+
+
+        // --- Components ---
+
+        const LanguageSwitcher = ({ currentLang, setLang, t }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            return (
+                // Replaced Framer Motion components with standard elements
+                <div className="relative" onMouseEnter={() => setIsOpen(true)} onMouseLeave={() => setIsOpen(false)}>
+                    <button className="flex items-center gap-2 px-2 sm:px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+                        <IconGlobe className="text-gray-600"/>
+                        <span className="hidden sm:inline">{langMap[currentLang]}</span>
+                    </button>
+                    {isOpen && (
+                        // Added simple CSS transitions
+                        <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden z-50 transition-all duration-300 ease-in-out opacity-100">
+                            {Object.keys(langMap).map(langKey => (
+                                <button key={langKey} onClick={() => { setLang(langKey); setIsOpen(false); }} className={`w-full text-left px-4 py-2 text-sm transition-colors ${currentLang === langKey ? 'bg-sky-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+                                    {langMap[langKey]}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const CharacterUploader = ({ character, onImageUpload, onRemove, onDescriptionChange, t }) => {
+            const inputRef = useRef(null);
+            return (
+                <div className="flex flex-col gap-2">
+                    <div className="relative group">
+                        <div onClick={() => inputRef.current.click()} className="aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center bg-gray-100 hover:border-blue-500 transition-colors cursor-pointer overflow-hidden">
+                            {character.image ? (
+                                <img src={character.image} alt="Uploaded furniture" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="text-center text-gray-500">
+                                    <IconUpload className="mx-auto h-10 w-10 text-gray-400"/>
+                                    <p className="text-xs mt-1">{t.uploadCharacter}</p>
+                                </div>
+                            )}
+                        </div>
+                        {onRemove && (
+                            <button onClick={onRemove} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <IconX />
+                            </button>
+                        )}
+                        <input type="file" ref={inputRef} onChange={onImageUpload} accept="image/png, image/jpeg" className="hidden" />
+                    </div>
+                    <input 
+                        type="text" 
+                        value={character.description} 
+                        onChange={onDescriptionChange}
+                        placeholder={t.characterDescriptionPlaceholder}
+                        className="w-full bg-white border border-gray-300 rounded-md p-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-center"
+                    />
+                </div>
+            );
+        };
+
+        const ResultCard = ({ result, onRegenerate, onDownload, onRegenerateCopy, t }) => {
+            const [copied, setCopied] = useState(false);
+
+            const handleCopy = (text) => {
+                // Fallback for document.execCommand('copy')
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                document.body.removeChild(textArea);
+                
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            return (
+                // Replaced motion.div with standard div and simplified animations to CSS classes
+                <div className="bg-white/80 rounded-xl overflow-hidden shadow-xl border border-gray-200 flex flex-col backdrop-blur-sm transition-opacity duration-500">
+                    <div className="aspect-square w-full bg-gray-100 flex items-center justify-center relative">
+                        {result.status === 'pending' && <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>}
+                        {result.status === 'failed' && (
+                            <div className="text-center p-4">
+                                <p className="text-red-600 mb-4">{t.errorOccurred}</p>
+                                <button onClick={onRegenerate} className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-400 text-sm flex items-center gap-2 mx-auto">
+                                    <IconRefresh/> {t.tryAgain}
+                                </button>
+                            </div>
+                        )}
+                        {result.status === 'success' && <img src={result.imageUrl} alt={'Generated office workspace photo'} className="w-full h-full object-cover" />}
+                    </div>
+                     {result.status === 'success' && (
+                         <div className="p-4 flex-grow flex flex-col justify-between text-gray-800">
+                            <div>
+                                <p className="text-gray-700 text-sm whitespace-pre-wrap">{result.copy}</p>
+                                <button onClick={onRegenerateCopy} className="text-xs text-blue-600 hover:text-blue-500 mt-2 flex items-center gap-1">
+                                   <IconRefresh className="h-4 w-4" /> {t.regenerateCopy}
+                                </button>
+                            </div>
+                            <div className="pt-3 mt-3 border-t border-gray-200 flex flex-col gap-2">
+                                 <button onClick={() => handleCopy(result.copy)} className="w-full px-3 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-blue-500 hover:text-white text-sm flex items-center justify-center gap-2 border border-gray-300">
+                                     {copied ? <><IconCheck/> {t.copied}</> : <><IconCopy/> {t.copyTooltip}</>}
+                                 </button>
+                                 <div className="flex gap-2">
+                                    <button onClick={onRegenerate} className="w-full px-3 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm flex items-center justify-center gap-2 border border-gray-300">
+                                        <IconRefresh/> {t.regenerate}
+                                    </button>
+                                    <button onClick={onDownload} className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 text-sm flex items-center justify-center gap-2 shadow-md">
+                                        <IconDownload/> {t.downloadImage}
+                                    </button>
+                                 </div>
+                            </div>
+                         </div>
+                    )}
+                </div>
+            );
+        };
+
+        const HistoryPanel = ({ isVisible, onClose, history, onLoad, onDelete, t }) => {
+             // Replaced AnimatePresence/motion.div with conditional rendering and simple CSS transitions
+            if (!isVisible) return null;
+             
+            return (
+                <div
+                    onClick={onClose}
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 opacity-100" // Opacity transition
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        // Added CSS transition classes to simulate slide-in effect
+                        className="absolute inset-y-0 left-0 w-full max-w-md bg-white border-r border-gray-200 shadow-2xl flex flex-col text-gray-800 transform translate-x-0 transition-transform duration-500 ease-out"
+                    >
+                        <header className="p-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                            <h2 className="text-xl font-bold text-blue-600">{t.historyTitle}</h2>
+                            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
+                                <IconX className="text-gray-600"/>
+                            </button>
+                        </header>
+                        <div className="p-4 overflow-y-auto flex-grow">
+                            {history.length === 0 ? (
+                                <div className="h-full flex items-center justify-center text-center text-gray-500">
+                                    <p>{t.emptyHistory}</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {[...history].reverse().map(item => (
+                                        <div key={item.id} className="bg-gray-100 p-3 rounded-lg flex items-center gap-4 border border-gray-200">
+                                            <img src={item.results[0]?.imageUrl} className="w-20 h-20 object-cover rounded-md flex-shrink-0 shadow-md" alt="History preview"/>
+                                            <div className="flex-grow overflow-hidden">
+                                                <p className="font-semibold truncate">{item.theme?.title || t.originalThemeTitle}</p>
+                                                <p className="text-xs text-gray-500">{new Date(item.timestamp).toLocaleString()}</p>
+                                                <div className="flex gap-2 mt-2">
+                                                    <button onClick={() => onLoad(item)} className="px-3 py-1 text-xs bg-blue-600 text-white hover:bg-blue-500 rounded">{t.loadButton}</button>
+                                                    <button onClick={() => onDelete(item.id)} className="p-2 text-xs bg-red-600 text-white hover:bg-red-500 rounded"><IconTrash/></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const AppFooter = () => {
+            // Hardcoded links based on user request
+            const links = {
+                visitArtMatrix: { name: 'Website', url: 'https://wysen.com/' },
+                shopOnline: { name: 'Catalog', url: 'https://wysen.com/products/' },
+                contactUs: { name: 'Contact Us', url: 'https://wysen.com/contact-us/' },
+            };
+            
+            return (
+                <footer className="w-full max-w-7xl mx-auto py-8 px-4 mt-16 border-t border-gray-300">
+                    <div className="flex flex-col items-center gap-6">
+                        {links.visitArtMatrix && (
+                            <a 
+                                href={links.visitArtMatrix.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="portal-button chatroom-button text-lg sm:text-xl font-bold py-3 px-8 rounded-lg inline-block text-white"
+                            >
+                                <span>{links.visitArtMatrix.name}</span>
+                            </a>
+                        )}
+                        <div className="flex flex-row items-center justify-center gap-4 sm:gap-6">
+                            <a 
+                                href={links.shopOnline.url}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="portal-button text-lg sm:text-xl font-bold py-3 px-6 sm:px-8 rounded-lg whitespace-nowrap text-gray-800 hover:bg-gray-100"
+                            >
+                                🛒 {links.shopOnline.name}
+                            </a>
+                            <a 
+                                href={links.contactUs.url}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="portal-button text-lg sm:text-xl font-bold py-3 px-6 sm:px-8 rounded-lg whitespace-nowrap text-gray-800 hover:bg-gray-100"
+                            >
+                                📱{links.contactUs.name}
+                            </a>
+                        </div>
+                         <div className="text-center text-gray-500 text-sm mt-4">
+                             <p>&copy; 2025 Office Furniture Interior Design Tool (Demo)</p>
+                             <p className="mt-1">V1.0.0 (Furniture ID) - Embedded Version</p>
+                             <p className="mt-2 text-xs sm:text-sm whitespace-nowrap text-gray-400">Professional Workspace Visualization</p>
+                         </div>
+                    </div>
+                </footer>
+            );
+        };
+
+
+        const TourMeApp = () => {
+            const [language, setLanguage] = useState('en');
+            const [characters, setCharacters] = useState([{ id: 1, image: null, description: '' }]);
+            const [background, setBackground] = useState({ image: null, description: '' });
+            const [generatedResults, setGeneratedResults] = useState([]);
+            const [history, setHistory] = useState([]); // In-memory history for embedded version
+            const [isHistoryVisible, setIsHistoryVisible] = useState(false);
+            
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [isZipping, setIsZipping] = useState(false);
+            const [error, setError] = useState(null);
+            const [styleContext, setStyleContext] = useState(null); 
+
+            const resultsRef = useRef(null);
+            const t = translations[language] || translations['en'];
+
+            // Initialize Language and Default Style
+            useEffect(() => {
+                const userLang = navigator.language || navigator.userLanguage;
+                let initialLang = 'en';
+                if (userLang.startsWith('zh-CN')) {
+                    initialLang = 'zh-CN';
+                } else if (userLang.startsWith('zh')) {
+                    initialLang = 'zh-TW';
+                } else if (userLang.startsWith('ja')) {
+                    initialLang = 'ja';
+                } else if (userLang.startsWith('ko')) {
+                    initialLang = 'ko';
+                }
+                setLanguage(initialLang);
+
+                const currentT = translations[initialLang] || translations['en'];
+                const defaultStyle = { 
+                    title: currentT.originalThemeTitle, 
+                    description: currentT.originalThemeDescription 
+                };
+                setStyleContext(defaultStyle);
+                // No need to load app links or IDB in the embedded version
+            }, []);
+            
+            // Re-initialize style context on language change
+            useEffect(() => {
+                const currentT = translations[language] || translations['en'];
+                const defaultStyle = { 
+                    title: currentT.originalThemeTitle, 
+                    description: currentT.originalThemeDescription 
+                };
+                setStyleContext(defaultStyle);
+            }, [language]);
+            
+            // --- In-Memory History Handlers ---
+            const addGenerationToHistory = (generation) => {
+                const newId = Date.now();
+                setHistory(prev => [...prev, {...generation, id: newId}]);
+            }
+
+            const deleteGenerationFromHistory = (id) => {
+                setHistory(prev => prev.filter(item => item.id !== id));
+            };
+
+
+            // --- Component Logic Handlers (Unchanged) ---
+            
+            const handleAddCharacter = () => {
+                if (characters.length < 5) {
+                    setCharacters([...characters, { id: Date.now(), image: null, description: '' }]);
+                }
+            };
+            const handleRemoveCharacter = (id) => {
+                setCharacters(characters.filter(c => c.id !== id));
+            };
+            const handleCharacterImageUpload = async (e, id) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const base64 = await toBase64(file);
+                    const croppedBase64 = await cropImage(base64);
+                    setCharacters(characters.map(c => c.id === id ? { ...c, image: croppedBase64 } : c));
+                }
+            };
+            const handleCharacterDescriptionChange = (e, id) => {
+                setCharacters(characters.map(c => c.id === id ? { ...c, description: e.target.value } : c));
+            };
+
+            const handleBackgroundImageUpload = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const base64 = await toBase64(file);
+                    const croppedBase64 = await cropImage(base64);
+                    setBackground({ ...background, image: croppedBase64 });
+                }
+            };
+
+            const generateSingleResult = useCallback(async (styleContext, furniture, bg, resultIndex, lang) => {
+                try {
+                    const imagePrompt = prompts.generateImage(styleContext, furniture, !!bg.image, bg.description);
+                    const variedImagePrompt = `${imagePrompt} For this specific version (Image ${resultIndex + 1}/2), slightly alter the camera angle or furniture arrangement for variety.`;
+                    const imageUrl = await runVirtualTourImageGeneration(variedImagePrompt, furniture, bg);
+
+                    const imageDescriptionForCopy = await runGeminiMultimodal(prompts.describeImageForCopy, imageUrl);
+                    
+                    const copyPrompt = prompts.generateCopy(styleContext, imageDescriptionForCopy, furniture, lang);
+                    const rawCopy = await runGeminiText(copyPrompt);
+                    const copyData = parseJsonFromMarkdown(rawCopy);
+                    const copy = copyData ? `${copyData.copy}\n${copyData.hashtags.join(' ')}` : rawCopy;
+                    
+                    return { status: 'success', imageUrl, copy };
+                } catch (error) {
+                    console.error(`Error generating result ${resultIndex}:`, error);
+                    return { status: 'failed', imageUrl: null, copy: null };
+                }
+            }, []);
+
+            const handleGenerate = async () => {
+                const validFurniture = characters.filter(c => c.image);
+                if (validFurniture.length === 0 || (!background.image && !background.description.trim())) {
+                    setError(t.alertMessage);
+                    return;
+                }
+
+                setIsGenerating(true);
+                setError(null);
+                setGeneratedResults(Array(2).fill(null).map((_, i) => ({ id: i, status: 'pending' })));
+                setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+                const results = await Promise.all(
+                    Array(2).fill(null).map((_, i) => 
+                        generateSingleResult(styleContext, validFurniture, background, i, language)
+                    )
+                );
+                
+                const finalResults = results.map((res, i) => ({ ...res, id: i }));
+                setGeneratedResults(finalResults);
+                setIsGenerating(false);
+
+                if (finalResults.some(r => r.status === 'success')) {
+                    const historyEntry = {
+                        timestamp: new Date().toISOString(),
+                        theme: styleContext,
+                        characters: validFurniture.map(c => ({...c, id: Date.now() + Math.random()})), // create new IDs for history object
+                        background: background,
+                        results: finalResults.filter(r => r.status === 'success'),
+                        language: language
+                    };
+                    addGenerationToHistory(historyEntry);
+                }
+            };
+
+            const handleRegenerateOne = async (index) => {
+                setGeneratedResults(prev => prev.map((r, i) => i === index ? { ...r, status: 'pending' } : r));
+                const validFurniture = characters.filter(c => c.image);
+                const result = await generateSingleResult(styleContext, validFurniture, background, index, language);
+                setGeneratedResults(prev => prev.map((r, i) => i === index ? { ...r, ...result } : r));
+            };
+
+            const handleRegenerateCopy = async (index) => {
+                const currentResult = generatedResults[index];
+                if (!currentResult || currentResult.status !== 'success') return;
+                try {
+                    const validFurniture = characters.filter(c => c.image);
+                    const imageDescriptionForCopy = await runGeminiMultimodal(prompts.describeImageForCopy, currentResult.imageUrl);
+                    const copyPrompt = prompts.generateCopy(styleContext, imageDescriptionForCopy, validFurniture, language);
+                    const rawCopy = await runGeminiText(copyPrompt);
+                    const copyData = parseJsonFromMarkdown(rawCopy);
+                    const copy = copyData ? `${copyData.copy}\n${copyData.hashtags.join(' ')}` : rawCopy;
+                    setGeneratedResults(prev => prev.map((r, i) => i === index ? { ...r, copy } : r));
+                } catch (error) {
+                    console.error("Failed to regenerate copy:", error);
+                    setError(t.errorOccurred);
+                }
+            };
+            
+            const handleDownload = (imageUrl) => {
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                const randomStr = Math.random().toString(36).substring(2, 10);
+                link.download = `FurnitureID_${randomStr}.png`;
+                link.click();
+            };
+            
+            const handlePackageZip = async () => {
+                if (isZipping || typeof window.JSZip === 'undefined') return;
+                setIsZipping(true);
+                try {
+                    const zip = new window.JSZip();
+                    const successfulResults = generatedResults.filter(p => p.status === 'success');
+                    
+                    const promises = successfulResults.map(async (result, index) => {
+                        const imageResponse = await fetch(result.imageUrl);
+                        const imageBlob = await imageResponse.blob();
+                        const postPrefix = `office_workspace_photo_${index + 1}`;
+                        zip.file(`${postPrefix}.jpg`, imageBlob);
+                        zip.file(`${postPrefix}_copy.txt`, result.copy);
+                    });
+                    
+                    await Promise.all(promises);
+                    const content = await zip.generateAsync({ type: "blob" });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(content);
+                    link.download = `FurnitureID_Workspace.zip`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                } catch (err) {
+                    console.error("Error creating zip file:", err);
+                    setError(t.errorOccurred);
+                }
+                setIsZipping(false);
+            };
+
+            const handleStartOver = () => {
+                setCharacters([{ id: 1, image: null, description: '' }]);
+                setBackground({ image: null, description: '' });
+                setGeneratedResults([]);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const handleLoadFromHistory = (historyItem) => {
+                if(historyItem.language) {
+                    setLanguage(historyItem.language);
+                }
+                setCharacters(historyItem.characters.map(c => ({...c, id: Date.now() + Math.random()}))); // ensure new unique IDs
+                setBackground(historyItem.background);
+                setStyleContext(historyItem.theme);
+                setGeneratedResults(historyItem.results.map((r, i) => ({...r, id: i}))); // ensure new unique IDs
+                setIsHistoryVisible(false);
+                setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            };
+
+            return (
+                <>
+                    <style>{`
+                        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&family=Inter:wght@400;700;800&display=swap');
+                        body { 
+                            background-color: #f0f0f0; 
+                            color: #1f2937;
+                            font-family: 'Inter', 'Noto Sans TC', 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            min-height: 100vh;
+                        }
+                        #root {
+                            min-height: 100vh;
+                        }
+                        .font-title { font-family: 'Inter', 'Noto Sans TC', 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', sans-serif; }
+                        .font-body { font-family: 'Inter', 'Noto Sans TC', 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', sans-serif; }
+                        .text-glow { text-shadow: none; }
+                        .card-glow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+                        .main-button-glow { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+                        
+                        .portal-button {
+                            background-color: white;
+                            border: 1px solid #d1d5db;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                        }
+                        .portal-button:hover {
+                            transform: translateY(-2px) scale(1.01);
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }
+                        .chatroom-button {
+                            background-color: #1f2937; 
+                            color: white;
+                            border-color: #374151; 
+                            transition: all 0.3s ease;
+                            animation: none; 
+                        }
+                        .chatroom-button:hover {
+                            background-color: #374151;
+                        }
+                        
+                        /* Fix for Google Sites embed, ensuring full width */
+                        .embed-container {
+                            width: 100%;
+                            height: 100%;
+                            min-height: 800px; /* Ensure some height for content */
+                        }
+                    `}</style>
+                    <div className="font-body text-gray-800 min-h-screen relative flex flex-col embed-container">
+                        
+                        <HistoryPanel 
+                            isVisible={isHistoryVisible}
+                            onClose={() => setIsHistoryVisible(false)}
+                            history={history}
+                            onLoad={handleLoadFromHistory}
+                            onDelete={deleteGenerationFromHistory}
+                            t={t}
+                        />
+                        
+                        <div className="max-w-7xl mx-auto p-4 md:p-8 relative z-10 flex-grow w-full">
+                            <header className="flex justify-between items-center mb-10">
+                                <div className="flex-1">
+                                  <button onClick={() => setIsHistoryVisible(true)} className="hidden lg:flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+                                    <IconHistory className="text-gray-600"/> {t.historyButton}
+                                  </button>
+                                </div>
+                                <div className="flex-1 text-center">
+                                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-title tracking-tighter text-gray-900">{t.title}</h1>
+                                  <p className="text-gray-600 mt-2 text-sm sm:text-base">{t.subtitle}</p>
+                                </div>
+                                <div className="flex-1 flex justify-end">
+                                    <LanguageSwitcher currentLang={language} setLang={setLanguage} t={t} />
+                                </div>
+                            </header>
+                            
+                            {error && 
+                                <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg mb-8 flex justify-between items-center transition-opacity duration-500">
+                                  <span>{error}</span>
+                                  <button onClick={() => setError(null)}><IconX className="text-red-500"/></button>
+                                </div>
+                            }
+
+                            <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 backdrop-blur-xl card-glow mb-8">
+                                <h2 className="text-xl md:text-2xl font-semibold mb-6 text-gray-800 font-title">{t.step1}</h2>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div>
+                                        <h3 className="font-semibold text-lg mb-3 text-blue-600">{t.charactersTitle}</h3>
+                                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                                            {characters.map((char) => (
+                                                <CharacterUploader 
+                                                    key={char.id} 
+                                                    character={char} 
+                                                    onImageUpload={(e) => handleCharacterImageUpload(e, char.id)} 
+                                                    onDescriptionChange={(e) => handleCharacterDescriptionChange(e, char.id)}
+                                                    onRemove={characters.length > 1 ? () => handleRemoveCharacter(char.id) : null} 
+                                                    t={t} 
+                                                />
+                                            ))}
+                                            {characters.length < 5 && (
+                                                <div className="flex flex-col gap-2">
+                                                    <button onClick={handleAddCharacter} title={t.addCharacter} className="aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center bg-gray-100 hover:border-blue-500 transition-colors text-gray-500 hover:text-blue-500">
+                                                        <IconPlus />
+                                                    </button>
+                                                    <div className="h-[36px]"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg mb-3 text-blue-600">{t.backgroundTitle}</h3>
+                                        <div className="flex flex-col sm:flex-row gap-4 items-start">
+                                            <div className="w-full sm:w-1/3 flex-shrink-0">
+                                                <div onClick={() => document.getElementById('bg-upload').click()} className="aspect-square border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center bg-gray-100 hover:border-blue-500 transition-colors cursor-pointer overflow-hidden">
+                                                {background.image ? <img src={background.image} alt="background" className="w-full h-full object-cover" /> : <div className="text-center text-gray-500"><IconUpload className="mx-auto h-10 w-10 text-gray-400"/><p className="text-xs mt-1">{t.uploadBackground}</p></div>}
+                                                </div>
+                                                <input id="bg-upload" type="file" onChange={handleBackgroundImageUpload} className="hidden" />
+                                            </div>
+                                            <textarea value={background.description} onChange={e => setBackground({...background, description: e.target.value})} placeholder={t.backgroundDescPlaceholder} className="w-full sm:w-2/3 h-full min-h-[100px] sm:min-h-full bg-white border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="border-t border-gray-200 my-8"></div>
+                                
+                                <div className="text-center">
+                                    <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800 font-title">{t.step3}</h2>
+                                    <button onClick={handleGenerate} disabled={isGenerating} className="px-6 py-3 text-lg sm:px-8 sm:py-4 sm:text-xl bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 main-button-glow mx-auto">
+                                        {isGenerating ? (<><div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div><span>{t.generating}</span></>) : (<><IconSparkles/><span>{t.generateButton}</span></>)}
+                                    </button>
+                                    {generatedResults.length > 0 && !isGenerating && (
+                                         <div className="mt-4 transition-opacity duration-500">
+                                            <button onClick={handlePackageZip} disabled={isZipping} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:bg-gray-100 transition-colors flex items-center justify-center gap-2 mx-auto border border-gray-300">
+                                                {isZipping ? (<><div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-700"></div><span>{t.packaging}</span></>) : (<><IconZip/><span>{t.packageZip}</span></>)}
+                                            </button>
+                                         </div>
+                                    )}
+                                </div>
+                            </div>
+
+                             {generatedResults.length > 0 && (
+                                <div ref={resultsRef} className="mt-16">
+                                     <h2 className="text-3xl font-bold text-gray-900 text-center font-title mb-8">{t.resultsTitle}</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        {generatedResults.map((result, index) => (
+                                            <ResultCard 
+                                                key={index} 
+                                                result={{...result, id: index}}
+                                                onRegenerate={() => handleRegenerateOne(index)}
+                                                onDownload={() => handleDownload(result.imageUrl)}
+                                                onRegenerateCopy={() => handleRegenerateCopy(index)}
+                                                t={t} />
+                                        ))}
+                                    </div>
+                                    <div className="text-center mt-12">
+                                       <button onClick={handleStartOver} className="px-6 py-3 bg-white text-gray-800 font-semibold rounded-lg hover:bg-gray-100 transition-colors border border-gray-300">{t.startOver}</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <AppFooter />
+
+                        <button
+                            onClick={() => setIsHistoryVisible(true)}
+                            className="lg:hidden fixed bottom-4 left-4 bg-gray-900 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors z-30"
+                            title={t.historyButton}
+                        >
+                            <IconHistory />
+                        </button>
+                    </div>
+                </>
+            );
+        };
+
+        // Render the application using React DOM
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<TourMeApp />);
+    </script>
+</body>
+</html>
